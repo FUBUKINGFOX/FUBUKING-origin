@@ -6,7 +6,7 @@ import pathlib
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
-#===============bot
+#===============bot setting
 prefix = ["FBK ","fu ","/"]
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
 slash = SlashCommand(bot, sync_commands=True)
