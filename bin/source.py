@@ -13,7 +13,7 @@ with open("./bin/source/bot_cv.cov", mode="r", encoding="utf-8") as cv_ :
             end = True
         else :
             cv.append(str(f))
-            
-cv = random.choice(cv)
 
+cv = random.choice(cv)
+print(cv)
 ctc.printBlue("Source loaded...")
