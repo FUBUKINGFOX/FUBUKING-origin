@@ -11,7 +11,7 @@ time.sleep(1)
 os.system("cls")
 #===============
 server_id = []
-with open(file = "server.config", mode = "r", encoding = "utf-8") as id_ :
+with open(file = "./cfg/server.config", mode = "r", encoding = "utf-8") as id_ :
     end = False
     while end == False :
         id = id_.readline().strip("\n")
