@@ -4,7 +4,7 @@ import time
 import os
 import random
 #============
-sources_ = str(pathlib.Path(__file__).parent.absolute()) + "\\bin\\source\\"
+sources_ = str(pathlib.Path(__file__).parent.absolute()) + "\\source\\"
 #============
 cv = []
 with open("./bin/source/bot_cv.cov", mode="r", encoding="utf-8") as cv_ :
@@ -17,7 +17,5 @@ with open("./bin/source/bot_cv.cov", mode="r", encoding="utf-8") as cv_ :
             cv.append(str(f))
 
 cv = random.choice(cv)
+adminpic = sources_ + "admin.jpg"
 
-ctc.printBlue("Source loaded...\n")
-time.sleep(1)
-os.system("cls")

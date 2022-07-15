@@ -43,4 +43,3 @@ for w in playchannel :
     ctc.printDarkGreen(str(w)+"\n")
 
 time.sleep(2)
-os.system("cls")

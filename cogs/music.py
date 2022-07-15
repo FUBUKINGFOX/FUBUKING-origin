@@ -11,7 +11,7 @@ from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
 #===============
-from bin import file_loader, ctt, ctc
+from bin import file_loader, ctt, ctc, source
 enable_special_playchannel = bool(file_loader.setting["enable_special_playchannel"])
 playchannel = file_loader.playchannel
 owner_id = 794890107563671553
@@ -368,10 +368,17 @@ class Music(commands.Cog):
         elif not vc.is_playing():
             return
 
-        if voter == vc.source.requester or ctx.message.author.id == owner_id :
+        if voter == vc.source.requester :
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
+
+        elif ctx.message.author.id == owner_id :
+            await ctx.message.add_reaction('⏭')
+            self.totalvotes.clear()
+            vc.stop()
+            await ctx.send("執行身分:#[系統管理員]")
+            await ctx.send(file=discord.File(source.adminpic))
 
         elif voter not in self.totalvotes :
             self.totalvotes.append(voter)
