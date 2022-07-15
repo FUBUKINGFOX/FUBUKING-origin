@@ -10,8 +10,12 @@ from async_timeout import timeout
 from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
-from bin import file_loader, ctt
-
+#===============
+from bin import file_loader, ctt, ctc
+enable_special_playchannel = bool(file_loader.setting["enable_special_playchannel"])
+playchannel = file_loader.playchannel
+owner_id = 794890107563671553
+#===============
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -280,21 +284,41 @@ class Music(commands.Cog):
         search: str [Required]
             The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
-        await ctx.trigger_typing()
+        if enable_special_playchannel == True :
+            if ctx.channel.id in playchannel :
 
-        vc = ctx.voice_client
+                await ctx.trigger_typing()
 
-        if not vc:
-            await ctx.invoke(self.connect_)
+                vc = ctx.voice_client
 
-        player = self.get_player(ctx)
+                if not vc:
+                    await ctx.invoke(self.connect_)
 
-        # If download is False, source will be a dict which will be used later to regather the stream.
-        # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-        source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+                player = self.get_player(ctx)
 
-        await player.queue.put(source)
+                # If download is False, source will be a dict which will be used later to regather the stream.
+                # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
+                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
 
+                await player.queue.put(source)
+            else :
+                embed = discord.Embed(title="", description="Please order a song on the designated channel.", color=0xf6ff00)
+                await ctx.send(embed=embed)
+        else :
+            #copy===
+            await ctx.trigger_typing()
+
+            vc = ctx.voice_client
+
+            if not vc:
+                await ctx.invoke(self.connect_)
+
+            player = self.get_player(ctx)
+
+            source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+
+            await player.queue.put(source)
+            #=======
     @commands.command(name='pause', aliases=['stop'], description="pauses music")
     async def pause_(self, ctx):
         """Pause the currently playing song."""
@@ -344,7 +368,7 @@ class Music(commands.Cog):
         elif not vc.is_playing():
             return
 
-        if voter == vc.source.requester :
+        if voter == vc.source.requester or ctx.message.author.id == owner_id :
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
