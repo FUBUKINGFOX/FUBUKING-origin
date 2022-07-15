@@ -1,5 +1,5 @@
 ﻿#== encoding utf-8 ==
-from bin import file_loader, ctc, ctt
+from bin import ctc, ctt, key_loader, file_loader
 import os
 import psutil
 import time
@@ -114,4 +114,4 @@ async def on_ready() :
     await id.send(u'💽:{0.user.name}`{0.user.id}`'.format(bot))
 #===============BOT run
 if __name__ == "__main__" :
-    bot.run("ODkzODI1OTY5MTE3MzMxNDY3.G8qZ8b.I5egpsPOUO-prgUM5i49oNQ47Pbe934oadXH6k")
+    bot.run(key_loader.key)
