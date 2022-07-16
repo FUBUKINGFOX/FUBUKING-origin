@@ -16,6 +16,7 @@ with open("./bin/source/bot_cv.cov", mode="r", encoding="utf-8") as cv_ :
         else :
             cv.append(str(f))
 
+#============ouput
 cv = random.choice(cv)
 adminpic = sources_ + "admin.jpg"
 
