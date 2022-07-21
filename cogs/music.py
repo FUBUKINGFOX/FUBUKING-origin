@@ -302,7 +302,7 @@ class Music(commands.Cog):
 
                 await player.queue.put(source)
             else :
-                embed = discord.Embed(title="", description="Please order a song on the designated channel.", color=0xf6ff00)
+                embed = discord.Embed(title="", description="Please request a song on the designated channel.", color=0xf6ff00)
                 await ctx.send(embed=embed)
         else :
             #copy===
