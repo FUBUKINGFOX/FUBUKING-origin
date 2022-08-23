@@ -549,6 +549,11 @@ class Music(commands.Cog):
         await ctx.send(embed=embed)
         await self.cleanup(ctx.guild)
 
+    @commands.command(name='loop', description="loop now playing song.")
+    async def loop_(self, ctx):
+        await ctx.send("test")
+        pass
+
 
 def setup(bot):
     bot.add_cog(Music(bot))
