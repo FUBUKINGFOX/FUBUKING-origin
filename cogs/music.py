@@ -554,6 +554,10 @@ class Music(commands.Cog):
         await ctx.send("test")
         pass
 
+    @commands.command(name='break', description="break play loop.")
+    async def loop_(self, ctx):
+        await ctx.send("test")
+        pass
 
 def setup(bot):
     bot.add_cog(Music(bot))
