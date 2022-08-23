@@ -14,7 +14,7 @@ ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利�
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
 #===============bot setting
-prefix = ["!"]
+prefix = ["/","F ","!"]
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
 slash = SlashCommand(bot, sync_commands=True)
 path = str(pathlib.Path(__file__).parent.absolute())
