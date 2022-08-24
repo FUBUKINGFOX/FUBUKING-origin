@@ -561,6 +561,7 @@ class Music(commands.Cog):
         if not vc or not vc.is_playing():
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
             return await ctx.send(embed=embed)
+
     
 
     @commands.command(name='break', description="break play loop.")
