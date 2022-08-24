@@ -551,13 +551,31 @@ class Music(commands.Cog):
 
     @commands.command(name='loop', description="loop now playing song.")
     async def loop_(self, ctx):
-        await ctx.send("test loop command")
-        pass
+
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=0xff0000)
+            return await ctx.send(embed=embed)
+
+        if not vc or not vc.is_playing():
+            embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
+            return await ctx.send(embed=embed)
+    
 
     @commands.command(name='break', description="break play loop.")
-    async def loop_(self, ctx):
-        await ctx.send("test break command")
-        pass
+    async def break_(self, ctx):
+
+        vc = ctx.voice_client
+
+        if not vc or not vc.is_connected():
+            embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=0xff0000)
+            return await ctx.send(embed=embed)
+
+        if not vc or not vc.is_playing():
+            embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
+            return await ctx.send(embed=embed)
+    
 
 def setup(bot):
     bot.add_cog(Music(bot))
