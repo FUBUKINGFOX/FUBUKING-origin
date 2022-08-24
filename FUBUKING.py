@@ -9,7 +9,7 @@ from discord.ext import commands
 from discord_slash import SlashCommand
 #===============
 os.system("cls")
-ctc.printSkyBlue("Discord Bot Server [版本 3.0.0.1]\n")
+ctc.printSkyBlue("Discord Bot Server [版本 3.0.0.2]\n")
 ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
