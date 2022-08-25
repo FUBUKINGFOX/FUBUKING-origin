@@ -1,5 +1,5 @@
 ﻿#== encoding utf-8 ==
-from bin import ctc, ctt, key_loader, file_loader
+from bin import ctc, ctt, key_loader, file_loader, source
 import os
 import psutil
 import time
@@ -73,7 +73,7 @@ async def ping(ctx):
 @slash.slash(name="shutdown", description="Closes the connection to Discord.", guild_ids=server_id)
 @commands.is_owner()
 async def shutdown(ctx):
-    await ctx.send('shutdown')
+    await ctx.send(source.off_cv)
     await bot.close()
 #===============else
 
