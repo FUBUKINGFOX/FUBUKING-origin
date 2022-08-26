@@ -1,14 +1,20 @@
 import discord
-import requests as req
+import requests
+from bs4 import BeautifulSoup
 import random
 import time
 from discord.ext import commands
+#=========> test cog methods
 class methods():
     def req_covic():
+        info = []
         url = "https://covid-19.nchc.org.tw/dt_005-covidTable_taiwan.php"
-        r = req.get(url).text
-        return r
-
+        r = requests.get(url)
+        r = BeautifulSoup(r.text, "html.parser")
+        r = r.find_all("span", class_="country_confirmed_percent")
+        for i in r :
+            info.append(str(i).replace("<span class=\"country_confirmed_percent\"><small>","").replace("</small></span>",""))
+        return info
 
 class test(commands.Cog):
     def __init__(self, bot) :
@@ -26,9 +32,11 @@ class test(commands.Cog):
         await ctx.send(f"> 最後我幫你選擇了:\n{ans}")
 
     @commands.command(name='covic', description="")
+    @commands.is_owner()
     async def covic_(self, ctx):
-        await ctx.send("test")
-        print(methods.req_covic())
+        i = methods.req_covic()
+        await ctx.send("累計" + i[0])
+        await ctx.send(i[1])
 
 
 
