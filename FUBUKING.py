@@ -1,4 +1,5 @@
 ﻿#== encoding utf-8 ==
+from turtle import setpos
 from bin import ctc, ctt, key_loader, file_loader, source
 import os
 import psutil
@@ -13,6 +14,7 @@ ctc.printSkyBlue("Discord Bot Server [版本 3.0.0.2]\n")
 ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
+server_start_time = time.time()
 #===============bot setting
 prefix = ["/","F ","f "]
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
@@ -50,7 +52,7 @@ async def ping(ctx):
         e_color = 0x59ff00
 
     warn = ((str(warn)[1:-1]).replace(", ", "\n")).replace("'", "")
-    
+    server_test_time = time.time()
     #==========
     embed = (discord.Embed(title=u'🍵{0.user.name}'.format(bot),
                                description=f'```ini\n[system/INFO]                                            \n```',
@@ -58,7 +60,8 @@ async def ping(ctx):
                  .add_field(name='💠CPU usage', value=f"{CPU_use}%")
                  .add_field(name='🧱RAM usage', value=f"{RAM_use}%")
                  .add_field(name='📡ping', value=f"{ping}-ms")
-                 .set_author(icon_url=bot.user.avatar_url, name=f"CORN Studio"))
+                 .set_author(icon_url=bot.user.avatar_url, name=f"CORN Studio")
+                 .set_footer(text=f"伺服器自開啟已經運行{round(server_test_time - server_start_time, 4)}-s"))
     if e_color != 0x59ff00 :
         embed.add_field(name='WARN', value=f"```css\n{warn}```")
 
