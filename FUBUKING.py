@@ -61,7 +61,7 @@ async def ping(ctx):
                  .add_field(name='🧱RAM usage', value=f"{RAM_use}%")
                  .add_field(name='📡ping', value=f"{ping}-ms")
                  .set_author(icon_url=bot.user.avatar_url, name=f"CORN Studio")
-                 .set_footer(text=f"伺服器自開啟已經運行{round(server_test_time - server_start_time, 4)}-s"))
+                 .set_footer(text=f"伺服器自啟動已經運行{round(server_test_time - server_start_time, 4)}-s"))
     if e_color != 0x59ff00 :
         embed.add_field(name='WARN', value=f"```css\n{warn}```")
 
@@ -76,7 +76,7 @@ async def ping(ctx):
 @slash.slash(name="shutdown", description="Closes the connection to Discord.", guild_ids=server_id)
 @commands.is_owner()
 async def shutdown(ctx):
-    await ctx.send(source.off_cv)
+    await ctx.send(source.off_cv())
     await bot.close()
 #===============else
 
@@ -84,6 +84,8 @@ async def shutdown(ctx):
 for cog_files in os.listdir("./cogs") :
     if cog_files.endswith(".py") :
         bot.load_extension(f"cogs.{cog_files[:-3]}")
+    elif cog_files.endswith(".pyc") :
+        bot.load_extension(f"cogs.{cog_files[:-4]}")
 
 @bot.command(name="load",description="Load cog.")
 @commands.is_owner()
@@ -118,4 +120,4 @@ async def on_ready() :
     await id.send(u'💽:{0.user.name}`{0.user.id}`'.format(bot))
 #===============BOT run
 if __name__ == "__main__" :
-    bot.run(key_loader.key)
+    bot.run(key_loader.load_key())
