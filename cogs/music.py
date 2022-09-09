@@ -1,5 +1,4 @@
 ﻿#== encoding utf-8 ==
-from importlib.abc import FileLoader
 import discord
 from discord.ext import commands
 import asyncio
@@ -12,6 +11,7 @@ import youtube_dl
 from youtube_dl import YoutubeDL
 #===============
 from bin import file_loader, ctt, ctc, source
+from bin.net import YouTobe_playlist_exploer
 enable_special_playchannel = bool(file_loader.setting["enable_special_playchannel"])
 playchannel = file_loader.playchannel
 owner_id = [794890107563671553]
@@ -273,6 +273,31 @@ class Music(commands.Cog):
          
         embed = discord.Embed(title=f"connectting to `{channel}` voice_channel...",color=0x73bbff)
         await ctx.send(embed=embed)
+
+
+    @commands.command(name="play_list", aliases=["pl"], description="Play music list.")
+    async def play_list_(self, ctx, *, search: str):#https://youtube.com/playlist?list=PLbRVclJhpyxk8LHxQyxw3gRF2e87bE-rI
+        if ctx.channel.id in playchannel :
+            await ctx.trigger_typing()
+
+            vc = ctx.voice_client
+
+            if not vc:
+                await ctx.invoke(self.connect_)
+
+            player = self.get_player(ctx)
+
+            if "https://youtube.com/playlist?list=" in search :
+                songs = YouTobe_playlist_exploer.search(search)
+                for song in songs :
+                    source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False)
+                    await player.queue.put(source)
+                embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
+                await ctx.send(embed=embed)
+            else :
+                embed = discord.Embed(title="", description=f"url error.", color=0xf6ff00)
+                await ctx.send(embed=embed)
+
 
     @commands.command(name='play', aliases=['p','PLAY','P'], description="streams music")
     async def play_(self, ctx, *, search: str):
