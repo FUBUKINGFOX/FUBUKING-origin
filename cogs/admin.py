@@ -1,10 +1,9 @@
 import discord
 from discord.ext import commands
+from bin.class_init.cog_init import cog_init
 
-class admin(commands.Cog):
-    def __init__(self, bot) :
-        self.bot = bot
-
+class admin(cog_init):
+    
     @commands.command(name="closed_beta",aliases=['cb'], description="closed_beta")
     @commands.is_owner()
     async def closed_beta_(self, ctx):

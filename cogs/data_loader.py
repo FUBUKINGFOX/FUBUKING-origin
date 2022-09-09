@@ -1,10 +1,9 @@
 import discord
 from discord.ext import commands
 from bin import file_loader
+from bin.class_init.cog_init import cog_init
 
-class option(commands.Cog) :
-    def __init__(self, bot) :
-        self.bot = bot
+class option(cog_init) :
 
     @commands.command()
     async def list_server(self, ctx) :

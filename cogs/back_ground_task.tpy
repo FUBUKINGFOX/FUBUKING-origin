@@ -1,0 +1,15 @@
+#== encoding utf-8 ==
+import asyncio
+import discord
+from discord.ext import commands
+from bin.class_init.cog_init import cog_init
+
+class back_ground_task(cog_init) :
+    def __init__(self, *arg, **kwargs) :
+        super().__init__(*arg, **kwargs)
+
+    
+
+
+def setup(bot):
+    bot.add_cog(back_ground_task(bot))

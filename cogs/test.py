@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import random
 import time
 from discord.ext import commands
+from bin.class_init.cog_init import cog_init
 #=========> test cog methods
 class methods():
     def req_covic():
@@ -16,9 +17,7 @@ class methods():
             info.append(str(i).replace("<span class=\"country_confirmed_percent\"><small>","").replace("</small></span>",""))
         return info
 
-class test(commands.Cog):
-    def __init__(self, bot) :
-        self.bot = bot
+class test(cog_init):
 
     @commands.command(name='choice', aliases=["ce"], description="")
     async def choice_(self, ctx, list: str) :
