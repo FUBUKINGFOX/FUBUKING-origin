@@ -152,7 +152,7 @@ class MusicPlayer:
                                              f'```css\n[{e}]\n```')
                     continue
 
-            
+
         
 
             seconds = int(source.duration) % (24 * 3600) 
