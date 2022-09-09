@@ -8,7 +8,12 @@ class back_ground_task(cog_init) :
     def __init__(self, *arg, **kwargs) :
         super().__init__(*arg, **kwargs)
 
-    
+        async def back_ground():
+            await self.bot.wait_until_ready()
+            while not self.bot.is_close() :
+                pass
+
+        self.bd_task = self.bot.loop.creat_task(back_ground())
 
 
 def setup(bot):
