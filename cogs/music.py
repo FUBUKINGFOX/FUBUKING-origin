@@ -14,7 +14,7 @@ from youtube_dl import YoutubeDL
 from bin import file_loader, ctt, ctc, source
 enable_special_playchannel = bool(file_loader.setting["enable_special_playchannel"])
 playchannel = file_loader.playchannel
-owner_id = 794890107563671553
+owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
 youtube_dl.utils.bug_reports_message = lambda: ''
@@ -373,7 +373,7 @@ class Music(commands.Cog):
             self.totalvotes.clear()
             vc.stop()
 
-        elif ctx.message.author.id == owner_id :
+        elif ctx.message.author.id in owner_id :
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
