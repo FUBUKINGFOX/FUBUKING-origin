@@ -25,6 +25,7 @@ server_id = file_loader.server_id
 listener_port = (960010657506394132)
 #===============cmd
 @slash.slash(name="ping",description="Show ping.", guild_ids=server_id)
+@bot.command(name="ping",description="Show ping.")
 async def ping(ctx):
     #==========cpu, ram useage
     warn = []
@@ -74,6 +75,7 @@ async def ping(ctx):
     ctc.printGreen(u"==============================\n")
 
 @slash.slash(name="shutdown", description="Closes the connection to Discord.", guild_ids=server_id)
+@bot.command(name="shutdown", description="Closes the connection to Discord.")
 @commands.is_owner()
 async def shutdown(ctx):
     await ctx.send(source.off_cv())
