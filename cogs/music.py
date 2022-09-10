@@ -72,7 +72,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self.__getattribute__(item)
 
     @classmethod
-    async def create_source(cls, ctx, search: str, *, loop, download=False):
+    async def create_source(cls, ctx, search: str, *, loop, download=False, creat_Queued_message: bool):
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(ytdl.extract_info, url=search, download=download)
@@ -82,8 +82,9 @@ class YTDLSource(discord.PCMVolumeTransformer):
             # take first item from a playlist
             data = data['entries'][0]
 
-        embed = discord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
-        await ctx.send(embed=embed)
+        if creat_Queued_message == True :
+            embed = discord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
+            await ctx.send(embed=embed)
 
         if download:
             source = ytdl.prepare_filename(data)
@@ -274,31 +275,6 @@ class Music(commands.Cog):
         embed = discord.Embed(title=f"connectting to `{channel}` voice_channel...",color=0x73bbff)
         await ctx.send(embed=embed)
 
-
-    @commands.command(name="play_list", aliases=["pl"], description="Play music list.")
-    async def play_list_(self, ctx, *, search: str):#https://youtube.com/playlist?list=PLbRVclJhpyxk8LHxQyxw3gRF2e87bE-rI
-        if ctx.channel.id in playchannel :
-            await ctx.trigger_typing()
-
-            vc = ctx.voice_client
-
-            if not vc:
-                await ctx.invoke(self.connect_)
-
-            player = self.get_player(ctx)
-
-            if "https://youtube.com/playlist?list=" in search :
-                songs = YouTobe_playlist_exploer.search(search)
-                for song in songs :
-                    source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False)
-                    await player.queue.put(source)
-                embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
-                await ctx.send(embed=embed)
-            else :
-                embed = discord.Embed(title="", description=f"url error.", color=0xf6ff00)
-                await ctx.send(embed=embed)
-
-
     @commands.command(name='play', aliases=['p','PLAY','P'], description="streams music")
     async def play_(self, ctx, *, search: str):
         """Request a song and add it to the queue.
@@ -309,28 +285,8 @@ class Music(commands.Cog):
         search: str [Required]
             The song to search and retrieve using YTDL. This could be a simple search, an ID or URL.
         """
-        if enable_special_playchannel == True :
-            if ctx.channel.id in playchannel :
+        if (ctx.channel.id in playchannel) or enable_special_playchannel == False :
 
-                await ctx.trigger_typing()
-
-                vc = ctx.voice_client
-
-                if not vc:
-                    await ctx.invoke(self.connect_)
-
-                player = self.get_player(ctx)
-
-                # If download is False, source will be a dict which will be used later to regather the stream.
-                # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
-
-                await player.queue.put(source)
-            else :
-                embed = discord.Embed(title="", description="Please request a song on the designated channel.", color=0xf6ff00)
-                await ctx.send(embed=embed)
-        else :
-            #copy===
             await ctx.trigger_typing()
 
             vc = ctx.voice_client
@@ -340,10 +296,24 @@ class Music(commands.Cog):
 
             player = self.get_player(ctx)
 
-            source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False)
+            # If download is False, source will be a dict which will be used later to regather the stream.
+            # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
+            if "https://youtube.com/playlist?list=" in search :
+                songs = YouTobe_playlist_exploer.search(search)
+                for song in songs :
+                    source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
+                    await player.queue.put(source)
+                embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
+                await ctx.send(embed=embed)
+                await ctx.invoke(self.queue_info)
+            else :
+                source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False, creat_Queued_message=True)
 
             await player.queue.put(source)
-            #=======
+        else :
+            embed = discord.Embed(title="", description="Please request a song on the designated channel.", color=0xf6ff00)
+            await ctx.send(embed=embed)
+
     @commands.command(name='pause', aliases=['stop'], description="pauses music")
     async def pause_(self, ctx):
         """Pause the currently playing song."""
