@@ -299,13 +299,14 @@ class Music(commands.Cog):
             # If download is False, source will be a dict which will be used later to regather the stream.
             # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
             if "https://youtube.com/playlist?list=" in search :
-                songs = YouTobe_playlist_exploer.search(search)
+                songs = YouTobe_playlist_exploer.search(search)[0]
                 for song in songs :
                     source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
                     await player.queue.put(source)
                 embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
                 await ctx.send(embed=embed)
-                await ctx.invoke(self.queue_info)
+                if len(songs) < 10 :
+                    await ctx.invoke(self.queue_info)
             else :
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False, creat_Queued_message=True)
 
