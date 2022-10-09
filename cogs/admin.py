@@ -21,5 +21,16 @@ class admin(cog_init):
         embed = discord.Embed(title="==解除封閉測試==", description="", color=0x00ff15)
         await ctx.send(embed=embed)
 
+    @commands.command(name="v_kick", description="kick member from voice_channel")
+    @commands.is_owner()
+    async def v_kick(self, ctx, member: discord.Member):
+
+        await member.move_to(channel=None)
+        
+        await ctx.send("<:OKO:1028581472749240362>")
+        embed = discord.Embed(title=(f'已將{member}踢出語音頻道'), color=0xff0000)
+        await ctx.send(embed=embed)
+        
+
 def setup(bot):
     bot.add_cog(admin(bot))

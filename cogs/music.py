@@ -9,11 +9,14 @@ from async_timeout import timeout
 from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
+import spotify_dl
 #===============
-from bin import file_loader, ctt, ctc, source
+from bin import ctt, ctc, source
 from bin.net import YouTobe_playlist_exploer
-enable_special_playchannel = bool(file_loader.setting["enable_special_playchannel"])
-playchannel = file_loader.playchannel
+from bin.public import var
+setting = var.var["setting"]
+enable_special_playchannel = bool(setting["enable_special_playchannel"])
+playchannel = var.var["play_channel"]
 owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
@@ -39,7 +42,6 @@ ffmpegopts = {
 }
 
 ytdl = YoutubeDL(ytdlopts)
-
 
 class VoiceConnectionError(commands.CommandError):
     """Custom Exception class for connection errors."""
@@ -83,7 +85,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data = data['entries'][0]
 
         if creat_Queued_message == True :
-            embed = discord.Embed(title="", description=f"Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
+            embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
             await ctx.send(embed=embed)
 
         if download:
@@ -168,7 +170,7 @@ class MusicPlayer:
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
 
-            embed = (discord.Embed(title='Now playing',
+            embed = (discord.Embed(title='<:foxtail:995271447905833030>Now playing',
                                description=f'```css\n{source.title}\n```',
                                color=0x73d7ff)
                  .add_field(name='Duration', value=duration)
@@ -273,6 +275,7 @@ class Music(commands.Cog):
                 raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
          
         embed = discord.Embed(title=f"connectting to `{channel}` voice_channel...",color=0x73bbff)
+        await ctx.send("<:SUKONBU:1028588709915918386>")
         await ctx.send(embed=embed)
 
     @commands.command(name='play', aliases=['p','PLAY','P'], description="streams music")
@@ -299,18 +302,20 @@ class Music(commands.Cog):
             # If download is False, source will be a dict which will be used later to regather the stream.
             # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
             if "https://youtube.com/playlist?list=" in search :
-                songs = YouTobe_playlist_exploer.search(search)[0]
-                for song in songs :
-                    source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
-                    await player.queue.put(source)
-                embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
-                await ctx.send(embed=embed)
-                if len(songs) < 10 :
+                songs = YouTobe_playlist_exploer.search(search)
+                if len(songs) < 11 :
+                    for song in songs :
+                        source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
+                        await player.queue.put(source)
+                    embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
+                    await ctx.send(embed=embed)
                     await ctx.invoke(self.queue_info)
+                else :
+                    embed = discord.Embed(title="", description=f"歌單長度超過10首歌", color=0xf6ff00)
+                    await ctx.send(embed=embed)
             else :
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False, creat_Queued_message=True)
-
-            await player.queue.put(source)
+                await player.queue.put(source)
         else :
             embed = discord.Embed(title="", description="Please request a song on the designated channel.", color=0xf6ff00)
             await ctx.send(embed=embed)
@@ -373,8 +378,8 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
-            await ctx.send("執行身分:#[系統管理員]")
-            await ctx.send(file=discord.File(source.adminpic))
+            embed = discord.Embed(title="執行身分:<:kitunejyai:1028583632136314902>[系統管理員]", description="/skip", color=0x73d7ff)
+            await ctx.send(embed=embed)
 
         elif voter not in self.totalvotes :
             self.totalvotes.append(voter)

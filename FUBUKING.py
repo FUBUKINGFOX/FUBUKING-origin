@@ -1,27 +1,32 @@
 ﻿#== encoding utf-8 ==
 from bin import ctc, ctt, key_loader, file_loader, source
+from bin.class_init.cog_init import cog_init
+from bin.public import var
 import os
 import psutil
 import time
 import pathlib
+import numpy
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
+#===============bot setting
+prefix = numpy.array(["/","F ","f "])
+bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
+slash = SlashCommand(bot, sync_commands=True)
+path = str(pathlib.Path(__file__).parent.absolute())
+var.var_creat("setting", file_loader.load_config_json())
+setting = var.var["setting"]
+server_id = file_loader.load_server_id()
+var.var_creat("play_channel",file_loader.load_playchannel())
+listener_port = (960010657506394132)
 #===============
 os.system("cls")
-ctc.printSkyBlue("Discord Bot Server [版本 3.2.0.0]\n")
+ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.1]\n")
 ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
 server_start_time = time.time()
-#===============bot setting
-prefix = ["/","F ","f "]
-bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
-slash = SlashCommand(bot, sync_commands=True)
-path = str(pathlib.Path(__file__).parent.absolute())
-setting = file_loader.setting
-server_id = file_loader.server_id
-listener_port = (960010657506394132)
 #===============cmd
 @slash.slash(name="ping",description="Show ping.", guild_ids=server_id)
 async def ping(ctx):
@@ -75,10 +80,16 @@ async def ping(ctx):
 @slash.slash(name="shutdown", description="Closes the connection to Discord.", guild_ids=server_id)
 @commands.is_owner()
 async def shutdown(ctx):
+    await bot.change_presence(status=discord.Status.invisible)
     await ctx.send(source.off_cv())
     await bot.close()
 #===============else
-
+class commands_error_handler(cog_init) :
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx, error):
+        embed = discord.Embed(title="<:SAD:1028588126291120219>Command ERROR :", description=f"{error}", color=0xf6ff00)
+        await ctx.send(embed=embed)
+bot.add_cog(commands_error_handler(bot))
 #===============cog
 for cog_files in os.listdir("./cogs") :
     if cog_files.endswith(".py") :
@@ -95,10 +106,13 @@ async def load(ctx, extension):
 
 @bot.command(name="unload",description="Unload cog.")
 @commands.is_owner()
-async def load(ctx, extension):
-    await ctx.message.add_reaction('⚠️')
-    bot.unload_extension(f'cogs.{extension}')
-    await ctx.send(f"succed unload `{extension}` cog")
+async def unload(ctx, extension):
+    if extension == "commands_error_handler" :
+        await ctx.send("Can't unload this cog.")
+    else:
+        await ctx.message.add_reaction('⚠️')
+        bot.unload_extension(f'cogs.{extension}')
+        await ctx.send(f"succed unload `{extension}` cog")
 
 @bot.command(name="reload",description="Reload cog.")
 @commands.is_owner()

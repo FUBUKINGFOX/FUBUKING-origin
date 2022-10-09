@@ -34,7 +34,7 @@ def off_cv() :
     return random.choice(off_cv)
 
 #============ouput
-adminpic = sources_ + "admin.jpg"
+# adminpic = sources_ + "admin.jpg"
 #======methods
 
 
