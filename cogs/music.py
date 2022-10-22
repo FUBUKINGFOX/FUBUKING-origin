@@ -9,14 +9,14 @@ from async_timeout import timeout
 from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
-import spotify_dl
 #===============
 from bin import ctt, ctc, source
 from bin.net import YouTobe_playlist_exploer
 from bin.public import var
 setting = var.var["setting"]
-enable_special_playchannel = bool(setting["enable_special_playchannel"])
+enable_special_playchannel = eval(setting["enable_special_playchannel"])
 playchannel = var.var["play_channel"]
+songs_filter = var.var["songs_filter"]
 owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
@@ -84,16 +84,30 @@ class YTDLSource(discord.PCMVolumeTransformer):
             # take first item from a playlist
             data = data['entries'][0]
 
-        if creat_Queued_message == True :
-            embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
+        flag=0#filter
+        for i in data["title"].split(" "):
+            for j in songs_filter:
+                if i==j:
+                    flag=1
+                    break
+
+        if flag == 0 :#filt the song 
+
+            if creat_Queued_message == True :
+                embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
+                await ctx.send(embed=embed)
+
+            if download:
+                source = ytdl.prepare_filename(data)
+            else:
+                return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
+
+            return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
+        else :
+            await ctx.send("<:bikkuri:1028582291460587592>")
+            embed = discord.Embed(title="<:YABE:1028581521289908254>YABE", description="", color=0xf6ff00)
             await ctx.send(embed=embed)
-
-        if download:
-            source = ytdl.prepare_filename(data)
-        else:
-            return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
-
-        return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
+            return False
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -306,7 +320,8 @@ class Music(commands.Cog):
                 if len(songs) < 11 :
                     for song in songs :
                         source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
-                        await player.queue.put(source)
+                        if source != False :
+                            await player.queue.put(source)
                     embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
                     await ctx.send(embed=embed)
                     await ctx.invoke(self.queue_info)
@@ -315,7 +330,8 @@ class Music(commands.Cog):
                     await ctx.send(embed=embed)
             else :
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False, creat_Queued_message=True)
-                await player.queue.put(source)
+                if source != False :
+                    await player.queue.put(source)
         else :
             embed = discord.Embed(title="", description="Please request a song on the designated channel.", color=0xf6ff00)
             await ctx.send(embed=embed)

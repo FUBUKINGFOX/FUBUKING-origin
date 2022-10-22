@@ -19,10 +19,11 @@ var.var_creat("setting", file_loader.load_config_json())
 setting = var.var["setting"]
 server_id = file_loader.load_server_id()
 var.var_creat("play_channel",file_loader.load_playchannel())
+var.var_creat("songs_filter",file_loader.load_songs_filter(eval(setting["enable_songs_filter"])))
 listener_port = (960010657506394132)
 #===============
 os.system("cls")
-ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.1]\n")
+ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.2]\n")
 ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
@@ -64,7 +65,7 @@ async def ping(ctx):
                  .add_field(name='💠CPU usage', value=f"{CPU_use}%")
                  .add_field(name='🧱RAM usage', value=f"{RAM_use}%")
                  .add_field(name='📡ping', value=f"{ping}-ms")
-                 .set_author(icon_url=bot.user.avatar_url, name=f"CORN Studio")
+                 .set_author(icon_url="https://cdn.discordapp.com/emojis/1028895182290161746.webp", name=f"CORN Studio")
                  .set_footer(text=f"伺服器自啟動已經運行{round(server_test_time - server_start_time, 4)}-s"))
     if e_color != 0x59ff00 :
         embed.add_field(name='WARN', value=f"```css\n{warn}```")
@@ -81,14 +82,14 @@ async def ping(ctx):
 @commands.is_owner()
 async def shutdown(ctx):
     await bot.change_presence(status=discord.Status.invisible)
-    await ctx.send(source.off_cv())
+    await ctx.send("> " + source.off_cv() + "<:ANG:1028735212621938719>")
     await bot.close()
 #===============else
 class commands_error_handler(cog_init) :
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         embed = discord.Embed(title="<:SAD:1028588126291120219>Command ERROR :", description=f"{error}", color=0xf6ff00)
-        await ctx.send(embed=embed)
+        await ctx.message.reply(embed=embed)
 bot.add_cog(commands_error_handler(bot))
 #===============cog
 for cog_files in os.listdir("./cogs") :

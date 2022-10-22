@@ -26,11 +26,11 @@ class admin(cog_init):
     async def v_kick(self, ctx, member: discord.Member):
 
         await member.move_to(channel=None)
-        
+
         await ctx.send("<:OKO:1028581472749240362>")
         embed = discord.Embed(title=(f'已將{member}踢出語音頻道'), color=0xff0000)
         await ctx.send(embed=embed)
-        
+
 
 def setup(bot):
     bot.add_cog(admin(bot))

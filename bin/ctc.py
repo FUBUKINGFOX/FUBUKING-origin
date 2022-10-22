@@ -5,7 +5,7 @@ STD_INPUT_HANDLE = -10
 STD_OUTPUT_HANDLE = -11
 STD_ERROR_HANDLE = -12
 
-# Windows CMD©R¥O¦æ ¦rÅéÃC¦â©w¸q text colors
+# Windows CMDå‘½ä»¤è¡Œ å­—é«”é¡è‰²å®šç¾© text colors
 FOREGROUND_BLACK = 0x00 # black.
 FOREGROUND_DARKBLUE = 0x01 # dark blue.
 FOREGROUND_DARKGREEN = 0x02 # dark green.
@@ -24,7 +24,7 @@ FOREGROUND_YELLOW = 0x0e # yellow.
 FOREGROUND_WHITE = 0x0f # white.
 
 
-# Windows CMD©R¥O¦æ ­I´ºÃC¦â©w¸q background colors
+# Windows CMDå‘½ä»¤è¡Œ èƒŒæ™¯é¡è‰²å®šç¾© background colors
 BACKGROUND_BLUE = 0x10 # dark blue.
 BACKGROUND_GREEN = 0x20 # dark green.
 BACKGROUND_DARKSKYBLUE = 0x30 # dark skyblue.
@@ -56,105 +56,105 @@ def resetColor():
 
 ###############################################################
 
-#·tÂÅ¦â
+#æš—è—è‰²
 #dark blue
 def printDarkBlue(mess):
     set_cmd_text_color(FOREGROUND_DARKBLUE)
     sys.stdout.write(mess)
     resetColor()
 
-#·tºñ¦â
+#æš—ç¶ è‰²
 #dark green
 def printDarkGreen(mess):
     set_cmd_text_color(FOREGROUND_DARKGREEN)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¤ÑÂÅ¦â
+#æš—å¤©è—è‰²
 #dark sky blue
 def printDarkSkyBlue(mess):
     set_cmd_text_color(FOREGROUND_DARKSKYBLUE)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¬õ¦â
+#æš—ç´…è‰²
 #dark red
 def printDarkRed(mess):
     set_cmd_text_color(FOREGROUND_DARKRED)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¯»¬õ¦â
+#æš—ç²‰ç´…è‰²
 #dark pink
 def printDarkPink(mess):
     set_cmd_text_color(FOREGROUND_DARKPINK)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¶À¦â
+#æš—é»ƒè‰²
 #dark yellow
 def printDarkYellow(mess):
     set_cmd_text_color(FOREGROUND_DARKYELLOW)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¥Õ¦â
+#æš—ç™½è‰²
 #dark white
 def printDarkWhite(mess):
     set_cmd_text_color(FOREGROUND_DARKWHITE)
     sys.stdout.write(mess)
     resetColor()
 
-#·t¦Ç¦â
+#æš—ç°è‰²
 #dark gray
 def printDarkGray(mess):
     set_cmd_text_color(FOREGROUND_DARKGRAY)
     sys.stdout.write(mess)
     resetColor()
 
-#ÂÅ¦â
+#è—è‰²
 #blue
 def printBlue(mess):
     set_cmd_text_color(FOREGROUND_BLUE)
     sys.stdout.write(mess)
     resetColor()
 
-#ºñ¦â
+#ç¶ è‰²
 #green
 def printGreen(mess):
     set_cmd_text_color(FOREGROUND_GREEN)
     sys.stdout.write(mess)
     resetColor()
 
-#¤ÑÂÅ¦â
+#å¤©è—è‰²
 #sky blue
 def printSkyBlue(mess):
     set_cmd_text_color(FOREGROUND_SKYBLUE)
     sys.stdout.write(mess)
     resetColor()
 
-#¬õ¦â
+#ç´…è‰²
 #red
 def printRed(mess):
     set_cmd_text_color(FOREGROUND_RED)
     sys.stdout.write(mess)
     resetColor()
 
-#¯»¬õ¦â
+#ç²‰ç´…è‰²
 #pink
 def printPink(mess):
     set_cmd_text_color(FOREGROUND_PINK)
     sys.stdout.write(mess)
     resetColor()
 
-#¶À¦â
+#é»ƒè‰²
 #yellow
 def printYellow(mess):
     set_cmd_text_color(FOREGROUND_YELLOW)
     sys.stdout.write(mess)
     resetColor()
 
-#¥Õ¦â
+#ç™½è‰²
 #white
 def printWhite(mess):
     set_cmd_text_color(FOREGROUND_WHITE)
@@ -163,14 +163,14 @@ def printWhite(mess):
 
 ##################################################
 
-#¥Õ©³¶Â¦r
+#ç™½åº•é»‘å­—
 #white bkground and black text
 def printWhiteBlack(mess):
     set_cmd_text_color(FOREGROUND_BLACK | BACKGROUND_WHITE)
     sys.stdout.write(mess)
     resetColor()
 
-#¥Õ©³¶Â¦r
+#ç™½åº•é»‘å­—
 #white bkground and black text
 def printWhiteBlack_2(mess):
     set_cmd_text_color(0xf0)
@@ -178,10 +178,11 @@ def printWhiteBlack_2(mess):
     resetColor()
 
 
-#¶À©³ÂÅ¦r
+#é»ƒåº•è—å­—
 #white bkground and black text
 def printYellowRed(mess):
     set_cmd_text_color(BACKGROUND_YELLOW | FOREGROUND_RED)
     sys.stdout.write(mess)
     resetColor()
+
 
