@@ -3,6 +3,8 @@ from bin import ctc, ctt, key_loader, file_loader, source
 from bin.class_init.cog_init import cog_init
 from bin.public import var
 import os
+import sys
+import getopt #input args
 import psutil
 import time
 import pathlib
@@ -10,6 +12,20 @@ import numpy
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
+#===============app start
+argv = sys.argv[1:]
+arg_token = None
+try:
+    opts, args = getopt.getopt(argv,"ht:",["token="])
+except getopt.GetoptError:
+    print ('main.py -t <token>')
+    sys.exit(2)
+for opt, arg in opts:
+      if opt == '-h':
+         print ('main.py -t <token>')
+         sys.exit()
+      elif opt in ("-t", "--token"):
+         arg_token = arg
 #===============bot setting
 prefix = numpy.array(["/","F ","f "])
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
@@ -23,7 +39,7 @@ var.var_creat("songs_filter",file_loader.load_songs_filter(eval(setting["enable_
 listener_port = (960010657506394132)
 #===============
 os.system("cls")
-ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.2]\n")
+ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.3]\n")
 ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
 ctc.printDarkGray(ctt.time_now())
 ctc.printDarkGray("connecting to discord...\n")
@@ -134,4 +150,4 @@ async def on_ready() :
     await id.send(u'💽:{0.user.name}`{0.user.id}`'.format(bot))
 #===============BOT run
 if __name__ == "__main__" :
-    bot.run(key_loader.load_key())
+    bot.run(key_loader.load_key(arg_token))

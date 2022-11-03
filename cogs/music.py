@@ -15,8 +15,11 @@ from bin.net import YouTobe_playlist_exploer
 from bin.public import var
 setting = var.var["setting"]
 enable_special_playchannel = eval(setting["enable_special_playchannel"])
+enable_request_banned_song = eval(setting["enable_request_banned_song"])
 playchannel = var.var["play_channel"]
 songs_filter = var.var["songs_filter"]
+banned_song = []
+var.var_creat("filter_skip",False)
 owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
@@ -85,14 +88,34 @@ class YTDLSource(discord.PCMVolumeTransformer):
             data = data['entries'][0]
 
         flag=0#filter
-        for i in data["title"].split(" "):
-            for j in songs_filter:
-                if i==j:
-                    flag=1
-                    break
+        for j in songs_filter :
+            if j in data["title"] :
+                flag=1
+                break
 
-        if flag == 0 :#filt the song 
 
+        if flag == 1 :#filt the song 
+            if enable_request_banned_song == True :
+                embed = discord.Embed(title="此歌曲可能不適合部分聽眾", description=f"任何人均有跳過這首歌的權限", color=0xf6ff00)
+                await ctx.send(embed=embed)
+                banned_song.append(data['webpage_url'])
+
+                if creat_Queued_message == True :
+                    embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0xf6ff00)
+                    await ctx.send(embed=embed)
+                if download:
+                    source = ytdl.prepare_filename(data)
+                else:
+                    return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
+                return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)#@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+            else :
+                await ctx.send("<:bikkuri:1028582291460587592>")
+                embed = discord.Embed(title="<:YABE:1028581521289908254>YABE", description="", color=0xf6ff00)
+                await ctx.send(embed=embed)
+                return False
+
+        else :
             if creat_Queued_message == True :
                 embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0x73bbff)
                 await ctx.send(embed=embed)
@@ -103,11 +126,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
                 return {'webpage_url': data['webpage_url'], 'requester': ctx.author, 'title': data['title']}
 
             return cls(discord.FFmpegPCMAudio(source), data=data, requester=ctx.author)
-        else :
-            await ctx.send("<:bikkuri:1028582291460587592>")
-            embed = discord.Embed(title="<:YABE:1028581521289908254>YABE", description="", color=0xf6ff00)
-            await ctx.send(embed=embed)
-            return False
+
 
     @classmethod
     async def regather_stream(cls, data, *, loop):
@@ -182,8 +201,9 @@ class MusicPlayer:
             else:
                 duration = "%dminutes, %dseconds" % (minutes, seconds)
 
-            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set))
+            self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set) )
 
+            var.var["filter_skip"] = False
             embed = (discord.Embed(title='<:foxtail:995271447905833030>Now playing',
                                description=f'```css\n{source.title}\n```',
                                color=0x73d7ff)
@@ -193,6 +213,9 @@ class MusicPlayer:
                  .add_field(name='URL', value=f'[Click]({source.web_url})')
                  .set_thumbnail(url=source.thumbnail))
             self.np = await self._channel.send(embed=embed)
+            if source.web_url in banned_song :
+                banned_song.remove(source.web_url)
+                var.var["filter_skip"] = True 
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
@@ -217,6 +240,7 @@ class Music(commands.Cog):
     async def cleanup(self, guild):
         try:
             await guild.voice_client.disconnect()
+            banned_song.clear()
         except AttributeError:
             pass
 
@@ -389,6 +413,15 @@ class Music(commands.Cog):
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
+
+        elif var.var["filter_skip"] == True :
+            if vc.source.web_url in banned_song:
+                banned_song.remove(vc.source.web_url)
+            await ctx.message.add_reaction('⏭')
+            self.totalvotes.clear()
+            vc.stop()
+            embed = discord.Embed(title="執行身分:<:kitunejyai:1028583632136314902>[CORN_filter系統]", description="/skip", color=0x73d7ff)
+            await ctx.send(embed=embed)
 
         elif ctx.message.author.id in owner_id :
             await ctx.message.add_reaction('⏭')
