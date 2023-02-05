@@ -33,6 +33,11 @@ def off_cv() :
 
     return random.choice(off_cv)
 
+#============
+seeya = sources_ + "seeya.wav"
+welcome = sources_ + "welcome.wav"
+#============
+
 #============ouput
 # adminpic = sources_ + "admin.jpg"
 #======methods

@@ -4,6 +4,8 @@ from discord.ext import commands
 import asyncio
 import itertools
 import sys
+import time
+import os
 import traceback
 from async_timeout import timeout
 from functools import partial
@@ -18,8 +20,11 @@ enable_special_playchannel = eval(setting["enable_special_playchannel"])
 enable_request_banned_song = eval(setting["enable_request_banned_song"])
 playchannel = var.var["play_channel"]
 songs_filter = var.var["songs_filter"]
-banned_song = []
-var.var_creat("filter_skip",False)
+banned_song = {}
+list_song = {}
+var.var_creat("loop_list",[])
+var.var_creat("filter_skip",[])
+var.var_creat("list_skip",[])
 owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
@@ -27,6 +32,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdlopts = {
     'format': 'bestaudio/best',
+    'extractaudio': True,
+    'audioformat': 'mp3',
     'outtmpl': 'downloads/%(extractor)s-%(id)s-%(title)s.%(ext)s',
     'restrictfilenames': True,
     'noplaylist': True,
@@ -36,7 +43,7 @@ ytdlopts = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0'  # ipv6 addresses cause issues sometimes
+    'source_address': '0.0.0.0',  # ipv6 addresses cause issues sometimes
 }
 
 ffmpegopts = {
@@ -45,7 +52,6 @@ ffmpegopts = {
 }
 
 ytdl = YoutubeDL(ytdlopts)
-
 class VoiceConnectionError(commands.CommandError):
     """Custom Exception class for connection errors."""
 
@@ -96,9 +102,13 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         if flag == 1 :#filt the song 
             if enable_request_banned_song == True :
-                embed = discord.Embed(title="此歌曲可能不適合部分聽眾", description=f"任何人均有跳過這首歌的權限", color=0xf6ff00)
-                await ctx.send(embed=embed)
-                banned_song.append(data['webpage_url'])
+                embed = discord.Embed(title="<:bikkuri:1028582291460587592>此歌曲可能不適合部分聽眾", description=f"任何人均有跳過這首歌的權限", color=0xf6ff00)
+                await ctx.message.reply(embed=embed)
+                try :
+                    banned_song[ctx.guild.id].append(data['webpage_url'])
+                except KeyError :
+                    e = [data['webpage_url']]
+                    banned_song[ctx.guild.id] = e
 
                 if creat_Queued_message == True :
                     embed = discord.Embed(title="", description=f"<:HEY2:1028582334838083596>Queued [{data['title']}]({data['webpage_url']}) [{ctx.author.mention}]", color=0xf6ff00)
@@ -174,15 +184,15 @@ class MusicPlayer:
             try:
                 # Wait for the next song. If we timeout cancel the player and disconnect...
                 async with timeout(300):  # 5 minutes...
-                    source = await self.queue.get()
+                    source_ = await self.queue.get()
             except asyncio.TimeoutError:
                 return self.destroy(self._guild)
 
-            if not isinstance(source, YTDLSource):
+            if not isinstance(source_, YTDLSource):
                 # Source was probably a stream (not downloaded)
                 # So we should regather to prevent stream expiration
                 try:
-                    source = await YTDLSource.regather_stream(source, loop=self.bot.loop)
+                    source = await YTDLSource.regather_stream(source_, loop=self.bot.loop)
                 except Exception as e:
                     await self._channel.send(f'There was an error processing your song.\n'
                                              f'```css\n[{e}]\n```')
@@ -203,19 +213,48 @@ class MusicPlayer:
 
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set) )
 
-            var.var["filter_skip"] = False
+            e_color = 0x73d7ff ############__init
+            if self._guild.id in var.var["filter_skip"] :
+                var.var["filter_skip"].remove(self._guild.id)
+            if self._guild.id in var.var["list_skip"] :
+                var.var["list_skip"].remove(self._guild.id)
+            song_type = None
+
+            try :
+                if source.web_url in list_song[self._guild.id] :
+                    list_song[self._guild.id].remove(source.web_url)
+                    var.var["list_skip"].append(self._guild.id)
+                    e_color = 0xffff00
+                    song_type = 'list_song' 
+            except KeyError:
+                pass
+            try :
+                if source.web_url in banned_song[self._guild.id] :
+                    banned_song[self._guild.id].remove(source.web_url)
+                    var.var["filter_skip"].append(self._guild.id)
+                    e_color = 0xff5900
+                    song_type = 'banned_song'
+            except KeyError:
+                pass
+
             embed = (discord.Embed(title='<:foxtail:995271447905833030>Now playing',
                                description=f'```css\n{source.title}\n```',
-                               color=0x73d7ff)
+                               color=e_color)
                  .add_field(name='Duration', value=duration)
                  .add_field(name='Requested by', value=source.requester.mention)
                  .add_field(name='Uploader', value=f'[{source.uploader}]({source.uploader_url})')
-                 .add_field(name='URL', value=f'[Click]({source.web_url})')
+                 .add_field(name='URL', value=f'[Click]({source.web_url})') 
                  .set_thumbnail(url=source.thumbnail))
+
+            if song_type != None :
+                embed.add_field(name='song_tag', value=f'#{song_type}') 
+
+            if self._guild.id in var.var["loop_list"] :
+                await self.queue.put(source_)
+                embed.add_field(name='loop mod', value=f'ON')
+
             self.np = await self._channel.send(embed=embed)
-            if source.web_url in banned_song :
-                banned_song.remove(source.web_url)
-                var.var["filter_skip"] = True 
+            
             await self.next.wait()
 
             # Make sure the FFmpeg process is cleaned up.
@@ -239,15 +278,31 @@ class Music(commands.Cog):
 
     async def cleanup(self, guild):
         try:
+            guild.voice_client.pause()
+            time.sleep(0.5)
+            guild.voice_client.play(discord.FFmpegPCMAudio(source=source.seeya))
+            time.sleep(3)
             await guild.voice_client.disconnect()
-            banned_song.clear()
         except AttributeError:
+            pass
+
+        try:
+            del list_song[guild.id]
+        except KeyError:
+            pass
+
+        try:
+            del banned_song[guild.id]
+        except KeyError:
             pass
 
         try:
             del self.players[guild.id]
         except KeyError:
             pass
+
+        if guild.id in var.var['loop_list'] :
+            var.var['loop_list'].remove(guild.id)
 
     async def __local_check(self, ctx):
         """A local check which applies to all commands in this cog."""
@@ -303,12 +358,14 @@ class Music(commands.Cog):
             if vc.channel.id == channel.id:
                 return
             try:
-                await vc.move_to(channel)
+                vc_ = await vc.move_to(channel)
+                vc_.play(discord.FFmpegPCMAudio(source=source.welcome))
             except asyncio.TimeoutError:
                 raise VoiceConnectionError(f'Moving to channel: <{channel}> timed out.')
         else:
             try:
-                await channel.connect()
+                vc_ = await channel.connect()
+                vc_.play(discord.FFmpegPCMAudio(source=source.welcome))
             except asyncio.TimeoutError:
                 raise VoiceConnectionError(f'Connecting to channel: <{channel}> timed out.')
          
@@ -334,24 +391,40 @@ class Music(commands.Cog):
 
             if not vc:
                 await ctx.invoke(self.connect_)
+                time.sleep(4)###################################################@
 
             player = self.get_player(ctx)
 
             # If download is False, source will be a dict which will be used later to regather the stream.
             # If download is True, source will be a discord.FFmpegPCMAudio with a VolumeTransformer.
-            if "https://youtube.com/playlist?list=" in search :
+            if "youtube.com/playlist?list=" in search :
                 songs = YouTobe_playlist_exploer.search(search)
-                if len(songs) < 11 :
-                    for song in songs :
-                        source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
-                        if source != False :
-                            await player.queue.put(source)
-                    embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
+                embed = discord.Embed(title="正在載入歌單...", description=f"<a:loading:1039138667953930310>預計載入時間:{round(0.7*len(songs), 2)}sec(s)", color=0xf6ff00)
+                await ctx.send(embed=embed)
+
+                if len(songs) >= 5:
+                    embed = discord.Embed(title="歌單長度較長可能影響他人點歌權益", description="任何人均有權限跳過歌單內的歌", color=0xf6ff00)
                     await ctx.send(embed=embed)
-                    await ctx.invoke(self.queue_info)
-                else :
-                    embed = discord.Embed(title="", description=f"歌單長度超過10首歌", color=0xf6ff00)
-                    await ctx.send(embed=embed)
+                    flag = 1
+
+                for song in songs :
+                    source = await YTDLSource.create_source(ctx, song, loop=self.bot.loop, download=False, creat_Queued_message=False)
+                    await asyncio.sleep(0.5)
+                    if source != False :
+                        await player.queue.put(source)
+                        if flag == 1 :
+                            try:
+                                list_song[ctx.guild.id].append(source['webpage_url'])
+                            except KeyError :
+                                e = [source['webpage_url']]
+                                list_song[ctx.guild.id] = e
+                    else :
+                        embed = discord.Embed(title="載入失敗", description=str(source["title"]) + "=>於黑名單中error code:[403]", color=0xf6ff00)
+                        await ctx.send(embed=embed)
+                embed = discord.Embed(title="", description=f"已從歌單載入{len(songs)}首歌!", color=0xf6ff00)
+                await ctx.send(embed=embed)
+                await ctx.invoke(self.queue_info)
+
             else :
                 source = await YTDLSource.create_source(ctx, search, loop=self.bot.loop, download=False, creat_Queued_message=True)
                 if source != False :
@@ -410,17 +483,41 @@ class Music(commands.Cog):
             return
 
         if voter == vc.source.requester :
+            try :
+                if vc.source.web_url in banned_song[ctx.guild.id]:
+                    banned_song[ctx.guild.id].remove(vc.source.web_url)
+            except KeyError:
+                pass
+            try :
+                if vc.source.web_url in list_song[ctx.guild.id]:
+                    list_song[ctx.guild.id].remove(vc.source.web_url)
+            except KeyError :
+                pass
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
 
-        elif var.var["filter_skip"] == True :
-            if vc.source.web_url in banned_song:
-                banned_song.remove(vc.source.web_url)
+        elif ctx.guild.id in var.var["filter_skip"]:
+            if vc.source.web_url in banned_song[ctx.guild.id]:
+                banned_song[ctx.guild.id].remove(vc.source.web_url)
+            try :
+                if vc.source.web_url in list_song[ctx.guild.id]:
+                    list_song[ctx.guild.id].remove(vc.source.web_url)
+            except KeyError:
+                pass
             await ctx.message.add_reaction('⏭')
             self.totalvotes.clear()
             vc.stop()
             embed = discord.Embed(title="執行身分:<:kitunejyai:1028583632136314902>[CORN_filter系統]", description="/skip", color=0x73d7ff)
+            await ctx.send(embed=embed)
+
+        elif ctx.guild.id in var.var["list_skip"]:
+            if vc.source.web_url in list_song[ctx.guild.id]:
+                list_song[ctx.guild.id].remove(vc.source.web_url)
+            await ctx.message.add_reaction('⏭')
+            self.totalvotes.clear()
+            vc.stop()
+            embed = discord.Embed(title="執行身分:<:kitunejyai:1028583632136314902>[CORN_music_list系統]", description="/skip", color=0x73d7ff)
             await ctx.send(embed=embed)
 
         elif ctx.message.author.id in owner_id :
@@ -464,6 +561,17 @@ class Music(commands.Cog):
                 del player.queue._queue[pos-1]
                 embed = discord.Embed(title="", description=f"Removed [{s['title']}]({s['webpage_url']}) [{s['requester'].mention}]", color=0xf200ff)
                 await ctx.send(embed=embed)
+                try :
+                    if s['webpage_url'] in banned_song[ctx.guild.id]:
+                        banned_song[ctx.guild.id].remove(s['webpage_url'])
+                except KeyError :
+                    pass
+
+                try : 
+                    if s['webpage_url'] in list_song[ctx.guild.id]:
+                        list_song[ctx.guild.id].remove(s['webpage_url'])
+                except KeyError :
+                    pass
             except:
                 embed = discord.Embed(title="", description=f'Could not find a track for "{pos}"', color=0xff0000)
                 await ctx.send(embed=embed)
@@ -480,11 +588,19 @@ class Music(commands.Cog):
 
         player = self.get_player(ctx)
         player.queue._queue.clear()
+        try :
+            del list_song[ctx.guild.id]
+        except KeyError:
+            pass
+        try :
+            del banned_song[ctx.guild.id]
+        except KeyError :
+            pass
         await ctx.message.add_reaction('💣')
         await ctx.send('**Cleared**')
 
     @commands.command(name='queue', aliases=['q', 'playlist', 'que'], description="shows the queue")
-    async def queue_info(self, ctx):
+    async def queue_info(self, ctx, page :int=1):
         """Retrieve a basic queue of upcoming songs."""
         vc = ctx.voice_client
 
@@ -507,15 +623,35 @@ class Music(commands.Cog):
         else:
             duration = "%02dm %02ds" % (minutes, seconds)
 
-        # Grabs the songs in the queue...
-        upcoming = list(itertools.islice(player.queue._queue, 0, int(len(player.queue._queue))))
-        fmt = '\n'.join(f"`{(upcoming.index(_)) + 1}.` [{_['title']}]({_['webpage_url']}) | ` {duration} Requested by: {_['requester']}`\n" for _ in upcoming)
-        fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt + f"\n**{len(upcoming)} songs in queue**"
-        embed = discord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=0x00ff33)
-        embed.set_footer(text=f"{ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        total_len = int(len(player.queue._queue)) // 10
+        page -= 1
 
-        await ctx.send(embed=embed)
+        if page < 0:
+            embed = discord.Embed(title="", description="queue <page:必須為不等於0之正數>", color=0xf6ff00)
+            await ctx.send(embed=embed)
 
+        elif page <= total_len :
+        
+            q_start = page*10
+            e_color = 0x00eaff
+            loop_mod = ""
+            if ctx.guild.id in var.var['loop_list'] :
+                loop_mod = "\nloop mod : ON"
+                e_color = 0x00ff33
+
+            # Grabs the songs in the queue...
+            upcoming = list(itertools.islice(player.queue._queue, q_start, (q_start+10)))
+            fmt = '\n'.join(f"`{(upcoming.index(_)) + 1 + q_start}.` [{_['title']}]({_['webpage_url']}) | `Requested by: {_['requester']}`\n" for _ in upcoming)
+            fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt +f"{loop_mod}" +f"\n**{len(player.queue._queue)} songs in queue**"
+            embed = discord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=e_color)
+            embed.set_footer(text=f"page:{page+1}/{total_len+1}", icon_url=ctx.author.avatar_url)
+
+            await ctx.send(embed=embed)
+        
+        else :
+            embed = discord.Embed(title="", description="queue <page: out of range>", color=0xf6ff00)
+            await ctx.send(embed=embed)
+            
     @commands.command(name='nowplaying', aliases=['playing'], description="shows the current playing song")
     async def now_playing_(self, ctx):
         """Display information about the currently playing song."""
@@ -524,8 +660,6 @@ class Music(commands.Cog):
         if not vc or not vc.is_connected():
             embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=0xff0000)
             return await ctx.send(embed=embed)
-
-        player = self.get_player(ctx)
 
         if not vc or not vc.is_playing():
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
@@ -597,12 +731,16 @@ class Music(commands.Cog):
 
         embed = discord.Embed(title="disconnect...",color=0x232323)
         await ctx.send(embed=embed)
+
         await self.cleanup(ctx.guild)
 
-    @commands.command(name='loop', description="loop now playing song.")
+    @commands.command(name='loop', description="loop now playing song list.")
     async def loop_(self, ctx):
 
+        player = self.get_player(ctx)
         vc = ctx.voice_client
+        if not player.queue.empty() :
+            upcoming = list(itertools.islice(player.queue._queue, 0, len(player.queue._queue)))
 
         if not vc or not vc.is_connected():
             embed = discord.Embed(title="", description="I'm not connected to a voice channel", color=0xff0000)
@@ -612,6 +750,16 @@ class Music(commands.Cog):
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
             return await ctx.send(embed=embed)
 
+        if ctx.guild.id not in var.var['loop_list']:
+            var.var['loop_list'].append(ctx.guild.id)
+            embed = discord.Embed(title="turn on loop mod", description=f"type /break to break the loop", color=0x00ff00)
+            await ctx.send(embed=embed)
+            if player.queue.empty() or upcoming[-1]["webpage_url"] != vc.source.web_url :
+                s = await YTDLSource.create_source(ctx, vc.source.web_url, loop=self.bot.loop, download=False, creat_Queued_message=False)
+                await player.queue.put(s)
+        else :
+            embed = discord.Embed(title="you have already turn on loop mod", description=f"type /break to break the loop", color=0xf6ff00)
+            await ctx.send(embed=embed)
     
 
     @commands.command(name='break', description="break play loop.")
@@ -626,6 +774,14 @@ class Music(commands.Cog):
         if not vc or not vc.is_playing():
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
             return await ctx.send(embed=embed)
+
+        if ctx.guild.id in var.var['loop_list']:
+            var.var['loop_list'].remove(ctx.guild.id)
+            embed = discord.Embed(title="turn off loop mod", description=f"", color=0x00ff00)
+            await ctx.send(embed=embed)
+        else :
+            embed = discord.Embed(title="you have already turn off loop mod", description=f"type /loop to loop the play list", color=0xf6ff00)
+            await ctx.send(embed=embed)
     
 
 def setup(bot):

@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from bin.public import var
 from bin.class_init.cog_init import cog_init
 
 class admin(cog_init):
@@ -29,8 +30,7 @@ class admin(cog_init):
 
         await ctx.send("<:OKO:1028581472749240362>")
         embed = discord.Embed(title=(f'已將{member}踢出語音頻道'), color=0xff0000)
-        await ctx.send(embed=embed)
-
+        await ctx.reply(embed=embed)
 
 def setup(bot):
     bot.add_cog(admin(bot))

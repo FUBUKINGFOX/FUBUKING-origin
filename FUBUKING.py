@@ -1,5 +1,5 @@
 ﻿#== encoding utf-8 ==
-from bin import ctc, ctt, key_loader, file_loader, source
+from bin import config_loader, ctc, ctt, key_loader, source
 from bin.class_init.cog_init import cog_init
 from bin.public import var
 import os
@@ -31,11 +31,11 @@ prefix = numpy.array(["/","F ","f "])
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None)
 slash = SlashCommand(bot, sync_commands=True)
 path = str(pathlib.Path(__file__).parent.absolute())
-var.var_creat("setting", file_loader.load_config_json())
+var.var_creat("setting", config_loader.load_config_json())
 setting = var.var["setting"]
-server_id = file_loader.load_server_id()
-var.var_creat("play_channel",file_loader.load_playchannel())
-var.var_creat("songs_filter",file_loader.load_songs_filter(eval(setting["enable_songs_filter"])))
+server_id = config_loader.load_server_id()
+var.var_creat("play_channel",config_loader.load_playchannel())
+var.var_creat("songs_filter",config_loader.load_songs_filter(eval(setting["enable_songs_filter"])))
 listener_port = (960010657506394132)
 #===============
 os.system("cls")
@@ -119,7 +119,7 @@ for cog_files in os.listdir("./cogs") :
 async def load(ctx, extension):
     await ctx.message.add_reaction('✅')
     bot.load_extension(f'cogs.{extension}')
-    await ctx.send(f"succed load `{extension}` cog")
+    await ctx.send(f"succeed load `{extension}` cog")
 
 @bot.command(name="unload",description="Unload cog.")
 @commands.is_owner()
@@ -129,14 +129,20 @@ async def unload(ctx, extension):
     else:
         await ctx.message.add_reaction('⚠️')
         bot.unload_extension(f'cogs.{extension}')
-        await ctx.send(f"succed unload `{extension}` cog")
+        await ctx.send(f"succeed unload `{extension}` cog")
 
 @bot.command(name="reload",description="Reload cog.")
 @commands.is_owner()
 async def reload(ctx, extension):
     await ctx.message.add_reaction('🔄')
     bot.reload_extension(f'cogs.{extension}')
-    await ctx.send(f"succed reload `{extension}` cog")
+    await ctx.send(f"succeed reload `{extension}` cog")
+
+
+@slash.slash(name="kick", description="kick member from voice_channel", guild_ids=server_id)
+@commands.is_owner()
+async def kick(ctx, member: discord.Member):
+    await member.move_to(channel=None)
 
 #===============on ready
 @bot.event
