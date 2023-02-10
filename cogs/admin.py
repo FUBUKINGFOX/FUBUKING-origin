@@ -32,5 +32,5 @@ class admin(cog_init):
         embed = discord.Embed(title=(f'已將{member}踢出語音頻道'), color=0xff0000)
         await ctx.reply(embed=embed)
 
-def setup(bot):
-    bot.add_cog(admin(bot))
+async def setup(bot):
+    await bot.add_cog(admin(bot))

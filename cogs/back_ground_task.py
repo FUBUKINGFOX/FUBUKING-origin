@@ -25,5 +25,5 @@ class back_ground_task(cog_init) :
         self.bg_task = self.bot.loop.create_task(back_ground())
 
 
-def setup(bot):
-    bot.add_cog(back_ground_task(bot))
+async def setup(bot):
+    await bot.add_cog(back_ground_task(bot))

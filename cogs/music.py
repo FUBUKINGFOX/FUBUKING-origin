@@ -12,14 +12,14 @@ from functools import partial
 import youtube_dl
 from youtube_dl import YoutubeDL
 #===============
-from bin import ctt, ctc, source
+from bin import ctt, ctc, source,config_loader
 from bin.net import YouTobe_playlist_exploer
 from bin.public import var
 setting = var.var["setting"]
 enable_special_playchannel = eval(setting["enable_special_playchannel"])
 enable_request_banned_song = eval(setting["enable_request_banned_song"])
-playchannel = var.var["play_channel"]
-songs_filter = var.var["songs_filter"]
+playchannel = config_loader.load_playchannel()
+songs_filter = config_loader.load_songs_filter(eval(setting["enable_songs_filter"]))
 banned_song = {}
 list_song = {}
 var.var_creat("loop_list",[])
@@ -385,7 +385,7 @@ class Music(commands.Cog):
         """
         if (ctx.channel.id in playchannel) or enable_special_playchannel == False :
 
-            await ctx.trigger_typing()
+            await ctx.typing()
 
             vc = ctx.voice_client
 
@@ -784,5 +784,5 @@ class Music(commands.Cog):
             await ctx.send(embed=embed)
     
 
-def setup(bot):
-    bot.add_cog(Music(bot))
+async def setup(bot):
+    await bot.add_cog(Music(bot))

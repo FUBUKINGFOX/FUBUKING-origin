@@ -38,5 +38,5 @@ class test(cog_init):
 
 
 
-def setup(bot):
-    bot.add_cog(test(bot))
+async def setup(bot):
+    await bot.add_cog(test(bot))

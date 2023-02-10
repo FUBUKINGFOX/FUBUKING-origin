@@ -23,5 +23,5 @@ class functions(cog_init):
 
 
 
-def setup(bot) :
-    bot.add_cog(functions(bot))
+async def setup(bot) :
+    await bot.add_cog(functions(bot))

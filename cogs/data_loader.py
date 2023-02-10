@@ -27,5 +27,5 @@ class option(cog_init) :
         await ctx.send(embed=embed)
         
 
-def setup(bot) :
-    bot.add_cog(option(bot))
+async def setup(bot) :
+    await bot.add_cog(option(bot))
