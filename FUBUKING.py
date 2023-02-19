@@ -98,7 +98,8 @@ class commands_error_handler(cog_init) :
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         embed = discord.Embed(title="<:SAD:1028588126291120219>Command ERROR :", description=f"{error}", color=0xf6ff00)
-        await ctx.message.reply(embed=embed)
+        await ctx.message.delete()
+        await ctx.message.reply(embed=embed,delete_after=5)
 async def load_error_handler():
     await bot.add_cog(commands_error_handler(bot))
 #===============cog

@@ -21,6 +21,16 @@ class functions(cog_init):
         except Exception :
             pass
 
+    @commands.command()
+    async def test_button(self, ctx):
+        btn = discord.ui.Button(
+            label="press me.",
+            style= discord.ButtonStyle.danger
+        )
+        view = discord.ui.View()
+        view.add_item(btn)
+        await ctx.send(view=view)
+        
 
 
 async def setup(bot) :
