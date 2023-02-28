@@ -31,8 +31,7 @@ prefix = numpy.array(["/","F ","f "])
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=prefix, description='FUBUKING music bot.', help_command=None ,intents=intents)
 path = str(pathlib.Path(__file__).parent.absolute())
-var.var_creat("setting", config_loader.load_config_json())
-setting = var.var["setting"]
+var.var_creat("path", path)
 server_id = config_loader.load_server_id()
 listener_port = (960010657506394132)
 #===============
@@ -84,7 +83,7 @@ async def ping(ctx):
     ctc.printGreen(u"==============================\n")
     ctc.printYellow("=====>Bot_system\n")
     #time_now(False)
-    ctc.printYellow(f'ping:[{round(bot.latency*1000)}]-ms=>[{bot.latency*1000000}]-us\n')
+    ctc.printYellow(f'ping:[{ping}]-ms=>[{bot.latency*1000}]-us\n')
     ctc.printGreen(u"==============================\n")
 
 @bot.command(name="shutdown", description="Closes the connection to Discord.", guild_ids=server_id)
@@ -99,7 +98,7 @@ class commands_error_handler(cog_init) :
     async def on_command_error(self, ctx, error):
         embed = discord.Embed(title="<:SAD:1028588126291120219>Command ERROR :", description=f"{error}", color=0xf6ff00)
         await ctx.message.delete()
-        await ctx.message.reply(embed=embed,delete_after=5)
+        await ctx.send(embed=embed)
 async def load_error_handler():
     await bot.add_cog(commands_error_handler(bot))
 #===============cog
@@ -144,7 +143,7 @@ async def kick(ctx, member: discord.Member):
 @bot.event
 async def on_ready() :
     os.system("cls")
-    ctc.printSkyBlue("Discord Bot Server [版本 3.3.0.3]\n")
+    ctc.printSkyBlue("Discord Bot Server [版本 3.3.1.0]\n")
     ctc.printDarkSkyBlue("(c) CORN Studio. 著作權所有，並保留一切權利。\n")
     ctc.printGreen(u'Logged in as:\n'.format(bot))
     ctc.printPink(u'{0.user.name}\n'.format(bot))

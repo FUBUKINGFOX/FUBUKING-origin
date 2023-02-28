@@ -7,6 +7,7 @@ import sys
 import time
 import os
 import traceback
+import configparser
 from async_timeout import timeout
 from functools import partial
 import youtube_dl
@@ -15,16 +16,19 @@ from youtube_dl import YoutubeDL
 from bin import ctt, ctc, source,config_loader
 from bin.net import YouTobe_playlist_exploer
 from bin.public import var
-setting = var.var["setting"]
-enable_special_playchannel = eval(setting["enable_special_playchannel"])
-enable_request_banned_song = eval(setting["enable_request_banned_song"])
+config = configparser.ConfigParser()
+config.read("./cfg/config.ini")
+path = var.var["path"]
+enable_special_playchannel = config["music"].getboolean("enable_special_playchannel")
+enable_request_banned_song = config["music"].getboolean("enable_request_banned_song")
+enable_yt_cookie =  config["music"].getboolean("enable_yt_cookie")
 playchannel = config_loader.load_playchannel()
-songs_filter = config_loader.load_songs_filter(eval(setting["enable_songs_filter"]))
+songs_filter = config_loader.load_songs_filter(config["music"].getboolean("enable_songs_filter"))
 banned_song = {}
 list_song = {}
-var.var_creat("loop_list",[])
-var.var_creat("filter_skip",[])
-var.var_creat("list_skip",[])
+loop_list = []
+filter_skip = []
+list_skip = []
 owner_id = [794890107563671553]
 #===============
 # Suppress noise about console usage from errors
@@ -43,8 +47,12 @@ ytdlopts = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
+    'verbose': True,
     'source_address': '0.0.0.0',  # ipv6 addresses cause issues sometimes
 }
+if enable_yt_cookie == True :
+    ytdlopts["cookiefile"] = f"{path}\cfg\yt-cookie\ytcookie.txt"
+    ctc.printDarkYellow(f"cookie_file:  {path}\cfg\yt-cookie\ytcookie.txt\n")
 
 ffmpegopts = {
     'before_options': '-nostdin',
@@ -211,19 +219,20 @@ class MusicPlayer:
             else:
                 duration = "%dminutes, %dseconds" % (minutes, seconds)
 
+
             self._guild.voice_client.play(source, after=lambda _: self.bot.loop.call_soon_threadsafe(self.next.set) )
 
             e_color = 0x73d7ff ############__init
-            if self._guild.id in var.var["filter_skip"] :
-                var.var["filter_skip"].remove(self._guild.id)
-            if self._guild.id in var.var["list_skip"] :
-                var.var["list_skip"].remove(self._guild.id)
+            if self._guild.id in filter_skip :
+                filter_skip.remove(self._guild.id)
+            if self._guild.id in list_skip :
+                list_skip.remove(self._guild.id)
             song_type = None
 
             try :
                 if source.web_url in list_song[self._guild.id] :
                     list_song[self._guild.id].remove(source.web_url)
-                    var.var["list_skip"].append(self._guild.id)
+                    list_skip.append(self._guild.id)
                     e_color = 0xffff00
                     song_type = 'list_song' 
             except KeyError:
@@ -231,7 +240,7 @@ class MusicPlayer:
             try :
                 if source.web_url in banned_song[self._guild.id] :
                     banned_song[self._guild.id].remove(source.web_url)
-                    var.var["filter_skip"].append(self._guild.id)
+                    filter_skip.append(self._guild.id)
                     e_color = 0xff5900
                     song_type = 'banned_song'
             except KeyError:
@@ -249,7 +258,7 @@ class MusicPlayer:
             if song_type != None :
                 embed.add_field(name='song_tag', value=f'#{song_type}') 
 
-            if self._guild.id in var.var["loop_list"] :
+            if self._guild.id in loop_list :
                 await self.queue.put(source_)
                 embed.add_field(name='loop mod', value=f'ON')
 
@@ -301,8 +310,8 @@ class Music(commands.Cog):
         except KeyError:
             pass
 
-        if guild.id in var.var['loop_list'] :
-            var.var['loop_list'].remove(guild.id)
+        if guild.id in loop_list :
+            loop_list.remove(guild.id)
 
     async def __local_check(self, ctx):
         """A local check which applies to all commands in this cog."""
@@ -497,7 +506,7 @@ class Music(commands.Cog):
             self.totalvotes.clear()
             vc.stop()
 
-        elif ctx.guild.id in var.var["filter_skip"]:
+        elif ctx.guild.id in filter_skip:
             if vc.source.web_url in banned_song[ctx.guild.id]:
                 banned_song[ctx.guild.id].remove(vc.source.web_url)
             try :
@@ -511,7 +520,7 @@ class Music(commands.Cog):
             embed = discord.Embed(title="執行身分:<:kitunejyai:1028583632136314902>[CORN_filter系統]", description="/skip", color=0x73d7ff)
             await ctx.send(embed=embed)
 
-        elif ctx.guild.id in var.var["list_skip"]:
+        elif ctx.guild.id in list_skip:
             if vc.source.web_url in list_song[ctx.guild.id]:
                 list_song[ctx.guild.id].remove(vc.source.web_url)
             await ctx.message.add_reaction('⏭')
@@ -635,7 +644,7 @@ class Music(commands.Cog):
             q_start = page*10
             e_color = 0x00eaff
             loop_mod = ""
-            if ctx.guild.id in var.var['loop_list'] :
+            if ctx.guild.id in loop_list :
                 loop_mod = "\nloop mod : ON"
                 e_color = 0x00ff33
 
@@ -644,7 +653,7 @@ class Music(commands.Cog):
             fmt = '\n'.join(f"`{(upcoming.index(_)) + 1 + q_start}.` [{_['title']}]({_['webpage_url']}) | `Requested by: {_['requester']}`\n" for _ in upcoming)
             fmt = f"\n__Now Playing__:\n[{vc.source.title}]({vc.source.web_url}) | ` {duration} Requested by: {vc.source.requester}`\n\n__Up Next:__\n" + fmt +f"{loop_mod}" +f"\n**{len(player.queue._queue)} songs in queue**"
             embed = discord.Embed(title=f'Queue for {ctx.guild.name}', description=fmt, color=e_color)
-            embed.set_footer(text=f"page:{page+1}/{total_len+1}", icon_url=ctx.author.avatar_url)
+            embed.set_footer(text=f"page:{page+1}/{total_len+1}", icon_url=ctx.author.avatar.url)
 
             await ctx.send(embed=embed)
         
@@ -683,7 +692,7 @@ class Music(commands.Cog):
                  .add_field(name='Uploader', value=f'[{vc.source.uploader}]({vc.source.uploader_url})')
                  .add_field(name='URL', value=f'[Click]({vc.source.web_url})')
                  .set_thumbnail(url=vc.source.thumbnail))
-        embed.set_author(icon_url=self.bot.user.avatar_url, name=f"CORN Studio _Music")
+        embed.set_author(icon_url=self.bot.user.avatar.url, name=f"CORN Studio _Music")
         await ctx.send(embed=embed)
 
     @commands.command(name='volume', aliases=['vol', 'v'], description="changes Kermit's volume")
@@ -750,8 +759,8 @@ class Music(commands.Cog):
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
             return await ctx.send(embed=embed)
 
-        if ctx.guild.id not in var.var['loop_list']:
-            var.var['loop_list'].append(ctx.guild.id)
+        if ctx.guild.id not in loop_list:
+            loop_list.append(ctx.guild.id)
             embed = discord.Embed(title="turn on loop mod", description=f"type /break to break the loop", color=0x00ff00)
             await ctx.send(embed=embed)
             if player.queue.empty() or upcoming[-1]["webpage_url"] != vc.source.web_url :
@@ -775,8 +784,8 @@ class Music(commands.Cog):
             embed = discord.Embed(title="", description="I am currently not playing anything", color=0xf6ff00)
             return await ctx.send(embed=embed)
 
-        if ctx.guild.id in var.var['loop_list']:
-            var.var['loop_list'].remove(ctx.guild.id)
+        if ctx.guild.id in loop_list:
+            loop_list.remove(ctx.guild.id)
             embed = discord.Embed(title="turn off loop mod", description=f"", color=0x00ff00)
             await ctx.send(embed=embed)
         else :

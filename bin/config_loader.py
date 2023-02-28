@@ -1,16 +1,5 @@
-import json
 import time
 from bin import ctc
-#===============
-def load_config_json() :
-    file_ = "config.json"
-    with open(file_, mode="r", encoding="utf-8") as e :
-        setting = json.load(e)
-
-    ctc.printBlue(f"{file_} loaded...\n")
-    time.sleep(0.5)
-    return setting
-
 #===============
 def load_server_id() :
     file_ = "server.cfg"

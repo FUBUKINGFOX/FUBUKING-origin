@@ -32,5 +32,16 @@ class admin(cog_init):
         embed = discord.Embed(title=(f'已將{member}踢出語音頻道'), color=0xff0000)
         await ctx.reply(embed=embed)
 
+
+    @commands.command(name="v_move", description="move member from voice_channel")
+    @commands.is_owner()
+    async def v_move(self, ctx, member: discord.Member):
+        channel = self.bot.get_channel(741986816848035902)
+
+        await member.move_to(channel)
+
+        embed = discord.Embed(title=(f'member moved'), color=0xff0000)
+        await ctx.reply(embed=embed)
+
 async def setup(bot):
     await bot.add_cog(admin(bot))
